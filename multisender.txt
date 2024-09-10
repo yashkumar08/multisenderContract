@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.20;
+
+
+interface ERC20 {
+    function totalSupply() external view returns (uint theTotalSupply);
+    function balanceOf(address _owner) external view returns (uint balance);
+    function transfer(address _to, uint _value) external returns (bool success);
+    function transferFrom(address _from, address _to, uint _value) external returns (bool success);
+    function approve(address _spender, uint _value) external returns (bool success);
+    function allowance(address _owner, address _spender) external view returns (uint remaining);
+    event Transfer(address indexed _from, address indexed _to, uint _value);
+    event Approval(address indexed _owner, address indexed _spender, uint _value);
+} 
+
+contract MultiSend {
+    
+
+    event Transfer(address indexed recipient, uint256 amount);
+
+      function multiSend(address[] calldata recipients, uint256 amountPerRecipient) external payable {
+        require(recipients.length > 0, "No recipients provided");
+        require(amountPerRecipient > 0, "Amount per recipient must be greater than 0");
+        
+        uint256 totalRequired = amountPerRecipient * recipients.length;
+        
+        require(msg.value >= totalRequired, "Insufficient BNB provided");
+
+        // Transfer BNB to each recipient
+        for (uint256 i = 0; i < recipients.length; i++) {
+            payable(recipients[i]).transfer(amountPerRecipient);
+            emit Transfer(recipients[i], amountPerRecipient);
+        }
+
+        // Refund any leftover BNB back to the sender
+        uint256 leftover = msg.value - totalRequired;
+        if (leftover > 0) {
+            payable(msg.sender).transfer(leftover);
+        }
+    }
+
+    receive() external payable {}
+}
+
+
+
+
+
+
